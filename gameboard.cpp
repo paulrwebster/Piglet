@@ -1350,8 +1350,8 @@ void Gameboard::printBoard() {
 	std::cout << "Halfmove Clock: " << std::dec << halfMove << std::endl;
 	std::cout << "Fullmove Number: " << std::dec << fullMove << std::endl;
 	Evaluation Eval;
-	int eval = Eval.evaluateBoard(*this);
-	std::cout << "Board evaluation: " << eval << std::endl << std::endl;
+	//int eval = Eval.evaluateBoard(*this);
+	//std::cout << "Board evaluation: " << eval << std::endl << std::endl;
 
 }
 

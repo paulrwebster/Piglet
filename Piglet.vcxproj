@@ -135,6 +135,7 @@
     <ClInclude Include="gameboard.h" />
     <ClInclude Include="hashing.h" />
     <ClInclude Include="moveGen.h" />
+    <ClInclude Include="piglet.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="search.h" />
   </ItemGroup>
@@ -143,12 +144,9 @@
     <ClCompile Include="fen.cpp" />
     <ClCompile Include="gameboard.cpp" />
     <ClCompile Include="hashing.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="piglet.cpp" />
     <ClCompile Include="moveGen.cpp" />
     <ClCompile Include="search.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="chess.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

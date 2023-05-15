@@ -3,6 +3,7 @@
 #include <iomanip>   //setw
 #include <sstream>
 #include "gameboard.h"
+#include "piglet.h"
 #include "fen.h"
 #include <bitset>
 #include <string>
@@ -10,7 +11,6 @@
 #include "moveGen.h"
 #include "evaluation.h"
 #include "search.h"
-#include "resource.h"
 #include "hashing.h"
 
 
@@ -28,18 +28,8 @@ int killers[2][Defs::MaxSearchDepth] = { 0 };
 int searchHistory[15][128]; //[number of pieces][number of squares]
 chrono::steady_clock::time_point start;
 
-//My pseudo header
-int devStuff();
-int UCI();
-int perft();
-int perftCheckHash();
-
 vector<string> guiMoves; //holds the moves list sent by the gui as part of startpos moves command
 vector<string> goParts;  //holds the parsed parts of the go string
-
-#include <iostream>
-
-#include <string> 
 
 int main()
 {
@@ -184,8 +174,7 @@ int UCI()
 
 
 
-			int boardScore = EvalMain->evaluateBoard(*Board, Board->getSide()); //evaluate the board
-			Board->printBoard();
+			int boardScore = EvalMain->evaluateBoard(*Board); //evaluate the board
 			Board->printPieceList();
 
 		}
@@ -384,7 +373,7 @@ int devStuff()
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"); //opening board plus knight move
 	//Board->parseFen("rnb1k2r/pp2qppp/3p1n2/2pp2B1/1bP5/2N1P3/PP2NPP/R2QKB1R w KQkq - 0 1"); //Bluefever video 50 Middle Game Position. Demos quiescence at depth 3
 	Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase
-	//Board->parseFen("4k3/8/8/1B6/8/8/8/4K3 b - - 0 1");//test check depth increase
+	//Board->parseFen("4kq2/8/8/B1b5/8/1bB5/8/4KQ2 b - - 0 1");//test check end game
 	Board->printBoard();
 	Board->updatePieceList();
 	Board->setKingSquares();
@@ -418,6 +407,17 @@ int devStuff()
 	int bestMove = 0;
 	int mateDepth = 0;
 	Search::LINE bestLine;
+	//Test end game
+	if (EvalMain->isEndGame(*Board) == true)
+	{
+		std::cout << "End Game " << std::endl;
+	}
+	else
+	{
+		std::cout << "Middle Game " << std::endl;
+	}
+
+
 	if (iterativeDeepening == false)
 	{
 		//======================No iterative deepening stuff==========================
@@ -535,9 +535,7 @@ int devStuff()
 			" time " << (int)time_span.count()
 			<< " nodes " << numberOfNodes << " nps " << nps << " quiescence nodes " << Minimax->getNumberOfQNodes() << std::endl;
 	}
-	std::cout << "Number of hash matches " << Minimax->getNumberOfHashMatches() 
-		<< " Number of quiescence hash matches " << Minimax->getNumberOfQHashMatches()
-		<< std::endl;
+	std::cout << "Number of hash matches " << Minimax->getNumberOfHashMatches() << std::endl;
 	//======================End of the rest of the stuff========================================
 
 	return 0;

@@ -39,6 +39,9 @@
     <ClInclude Include="search.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="piglet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="evaluation.cpp">
@@ -53,7 +56,7 @@
     <ClCompile Include="hashing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="piglet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="moveGen.cpp">
@@ -62,10 +65,5 @@
     <ClCompile Include="search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="chess.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>

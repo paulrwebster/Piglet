@@ -1,7 +1,8 @@
 #include "search.h"
 #include <chrono> 
+#include <cstring>
 
-MoveGen Moves;
+MoveGen chessMoves;
 Evaluation Eval;
 //Hashing Hash;
 extern int killers[2][Defs::MaxSearchDepth];
@@ -184,7 +185,7 @@ void Search::resetNumberOfQHashMatches()
 
 void Search::initMoveGenMvvLva()
 {
-	Moves.initMvvLva();
+	chessMoves.initMvvLva();
 }
 int Search::reorderMoves(int bestMove, vector <MoveGen::moveList>* moves) //reorder best move first for iterative deepening
 {
@@ -226,17 +227,17 @@ long long Search::perft(Gameboard& Board, Hashing& Hash, int depth)
 		return 1;  //return 1 for each leaf node to add to nodes total
 	}
 
-	moves = Moves.generateMoves(Board, depth);
+	moves = chessMoves.generateMoves(Board, depth);
 
 	for (int i = 0; i < moves.size(); i++)
 	{
-		Board.movePiece(moves[i].move, Hash, Moves);
+		Board.movePiece(moves[i].move, Hash, chessMoves);
 
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			nodes += perft(Board, Hash, depth - 1);
 		}
-		Board.revertPiece(moves[i].move, Hash, Moves);
+		Board.revertPiece(moves[i].move, Hash, chessMoves);
 	}
 
 
@@ -258,27 +259,27 @@ long long Search::divide(Gameboard& Board, Hashing& Hash, int depth)
 	{
 		return 1;  //return 1 for each leaf node to add to nodes total
 	}
-	moves = Moves.generateMoves(Board, depth);
+	moves = chessMoves.generateMoves(Board, depth);
 
 	for (int i = 0; i < moves.size(); i++)
 	{
 
-		Board.movePiece(moves[i].move, Hash, Moves);
+		Board.movePiece(moves[i].move, Hash, chessMoves);
 		prev_nodes = nodes;
 
 		//if (Moves.isInCheck(Board, Board.getSide()) == false)
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		//if (Moves.isInCheck(Board) == false)
 		{
 			nodes += perft(Board, Hash, depth - 1);
 
 		}
 
-		Board.revertPiece(moves[i].move, Hash, Moves);
+		Board.revertPiece(moves[i].move, Hash, chessMoves);
 
 
 		cur_nodes = nodes - prev_nodes;
-		std::cout << Moves.moveRepresentationToNotation(moves[i].move) << " " << cur_nodes << " " << moves[i].move << std::endl;
+		std::cout << chessMoves.moveRepresentationToNotation(moves[i].move) << " " << cur_nodes << " " << moves[i].move << std::endl;
 
 	}
 
@@ -302,11 +303,11 @@ long long Search::divideCheckHash(Gameboard& Board, Hashing& Hash, Hashing& Chec
 		return 1;  //return 1 for each leaf node to add to nodes total
 	}
 
-	moves = Moves.generateMoves(Board, depth);
+	moves = chessMoves.generateMoves(Board, depth);
 
 	for (int i = 0; i < moves.size(); i++)
 	{
-		Board.movePiece(moves[i].move, Hash, Moves);
+		Board.movePiece(moves[i].move, Hash, chessMoves);
 		prev_nodes = nodes;
 
 		//std::cout << "After move " << Moves.moveRepresentationToNotation(moves[i]) << std::endl;
@@ -316,12 +317,12 @@ long long Search::divideCheckHash(Gameboard& Board, Hashing& Hash, Hashing& Chec
 		if (Hash.getZobristKey() != CheckHash.generatePositionKey(Board))
 		{
 			std::cout << "Divide moves " << i << std::endl;
-			std::cout << "Zobrist mismatch on Move " << moves[i].move << " " << Moves.moveRepresentationToNotation(moves[i].move) << std::endl;
+			std::cout << "Zobrist mismatch on Move " << moves[i].move << " " << chessMoves.moveRepresentationToNotation(moves[i].move) << std::endl;
 			std::cout << "Generated Hash Key is       : " << CheckHash.generatePositionKey(Board) << std::endl; //quick and inefficient to see if works
 			std::cout << "Board Hash Key is           : " << Hash.getZobristKey() << std::endl;
 			//std::cout << "Board Generated Hash Key is : " << Hash.generatePositionKey(Board) << std::endl;
 		}
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			//	if (moves[i] == 256740)
 			//	{
@@ -329,14 +330,14 @@ long long Search::divideCheckHash(Gameboard& Board, Hashing& Hash, Hashing& Chec
 			//	}
 			//	else
 			//	{
-			nodes += perftCheckHash(Board, Hash, CheckHash, depth - 1, Moves.moveRepresentationToNotation(moves[i].move));
+			nodes += perftCheckHash(Board, Hash, CheckHash, depth - 1, chessMoves.moveRepresentationToNotation(moves[i].move));
 			//	}
 		}
 
-		Board.revertPiece(moves[i].move, Hash, Moves);
+		Board.revertPiece(moves[i].move, Hash, chessMoves);
 
 		cur_nodes = nodes - prev_nodes;
-		std::cout << Moves.moveRepresentationToNotation(moves[i].move) << " " << cur_nodes << " " << moves[i].move << std::endl;
+		std::cout << chessMoves.moveRepresentationToNotation(moves[i].move) << " " << cur_nodes << " " << moves[i].move << std::endl;
 
 	}
 
@@ -358,27 +359,27 @@ long long Search::perftCheckHash(Gameboard& Board, Hashing& Hash, Hashing& Check
 		return 1;  //return 1 for each leaf node to add to nodes total
 	}
 
-	moves = Moves.generateMoves(Board, depth);
+	moves = chessMoves.generateMoves(Board, depth);
 
 	for (int i = 0; i < moves.size(); i++)
 	{
-		Board.movePiece(moves[i].move, Hash, Moves);
+		Board.movePiece(moves[i].move, Hash, chessMoves);
 
 		if (Hash.getZobristKey() != CheckHash.generatePositionKey(Board))
 		{
 			std::cout << "=========================================================" << std::endl;
 			std::cout << "Perft moves " << i << " Depth " << depth << " Parent move " << parentMove << std::endl;
-			std::cout << "Zobrist mismatch on Move " << moves[i].move << " " << Moves.moveRepresentationToNotation(moves[i].move) << std::endl;
+			std::cout << "Zobrist mismatch on Move " << moves[i].move << " " << chessMoves.moveRepresentationToNotation(moves[i].move) << std::endl;
 			std::cout << "Generated Hash Key is       : " << CheckHash.generatePositionKey(Board) << std::endl; //quick and inefficient to see if works
 			std::cout << "Board Hash Key is           : " << Hash.getZobristKey() << std::endl;
 			std::cout << "=========================================================" << std::endl;
 		}
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		//if (Moves.isInCheck(Board) == false)
 		{
 			nodes += perft(Board, Hash, depth - 1);
 		}
-		Board.revertPiece(moves[i].move, Hash, Moves);
+		Board.revertPiece(moves[i].move, Hash, chessMoves);
 	}
 
 	//return perftLeafNodes;
@@ -410,7 +411,6 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash, int depth, int alpha, in
 	LINE line;
 
 	int standPat = Eval.evaluateBoard(Board) * colour;
-
 	//stand pat stuff. If score is above beta, we can safely return beta
 	if (standPat >= beta)
 	{
@@ -433,7 +433,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash, int depth, int alpha, in
 		return standPat;
 	}
 	captureMoves.clear();
-	captureMoves = Moves.generateCaptureMoves(Board, depth);
+	captureMoves = chessMoves.generateCaptureMoves(Board, depth);
 	if (captureMoves.size() == 0)
 	{
 		return standPat;
@@ -446,15 +446,15 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash, int depth, int alpha, in
 	for (int i = 0; i < captureMoves.size(); ++i)
 	{
 		if (stop == true) { return Defs::StopEngine; }
-		Board.movePiece(captureMoves[i].move, Hash, Moves);
+		Board.movePiece(captureMoves[i].move, Hash, chessMoves);
 
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			numberOfQNodes++;
 			score = -quiescence(Board, Hash, depth - 1, -beta, -alpha, timePerMove);
 		}
 
-		Board.revertPiece(captureMoves[i].move, Hash, Moves);
+		Board.revertPiece(captureMoves[i].move, Hash, chessMoves);
 
 		if (score > alpha) { //get the move ordering stats
 			if (score >= beta) {
@@ -493,7 +493,6 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 	
 
 	int standPat = Eval.evaluateBoard(Board) * colour;
-
 	//stand pat stuff. If score is above beta, we can safely return beta
 	if (standPat >= beta)
 	{
@@ -513,7 +512,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 	}
 	
 	captureMoves.clear();
-	captureMoves = Moves.generateCaptureMoves(Board, 0); //ply parameter is provided for killer heuristic which is not applicable to quiescence
+	captureMoves = chessMoves.generateCaptureMoves(Board, 0); //ply parameter is provided for killer heuristic which is not applicable to quiescence
 	if (captureMoves.size() == 0)
 	{
 		return standPat;
@@ -527,9 +526,9 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 	{
 		if (stop == true) { return Defs::StopEngine; }
 		//Board.printBoard(); //for position prior to q node
-		Board.movePiece(captureMoves[i].move, Hash, Moves);
+		Board.movePiece(captureMoves[i].move, Hash, chessMoves);
 
-		if (Moves.isInCheck(Board, colour) == false)
+		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			numberOfQNodes++;
 			//std::cout << "=========== Q Nodes =============" << numberOfQNodes << " " << Moves.moveRepresentationToNotation(captureMoves[i].move) << std::endl;
@@ -539,7 +538,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 			score = -quiescence(Board, Hash, -beta, -alpha);
 		}
 
-		Board.revertPiece(captureMoves[i].move, Hash, Moves);
+		Board.revertPiece(captureMoves[i].move, Hash, chessMoves);
 
 		if (score > alpha) { //get the move ordering stats
 			if (score >= beta) {
@@ -579,7 +578,7 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 	
 	numberOfNodes++;
 
-	if (Moves.isInCheck(Board, colour) == true)
+	if (chessMoves.isInCheck(Board, colour) == true)
 	{
 		depth++; //increment depth if in check so that we do not miss a mate
 		pvDepth++;
@@ -607,7 +606,7 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 
 
 	//for each child of Board
-	moves = Moves.generateMoves(Board, depth);
+	moves = chessMoves.generateMoves(Board, depth);
 	
 
 	//Score the pv move
@@ -642,14 +641,14 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 			val = Defs::StopEngine;
 			return val;
 		}
-		Board.movePiece(moves[i].move, Hash, Moves);
-		if (Moves.isInCheck(Board, colour) == false)
+		Board.movePiece(moves[i].move, Hash, chessMoves);
+		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			legal++;
 			//numberOfNodes++;
 			val = -negamax(Board, Hash, depth - 1, pvDepth, -beta, -alpha, &line, timePerMove, mate - 1);
 			
-			Board.revertPiece(moves[i].move, Hash, Moves);
+			Board.revertPiece(moves[i].move, Hash, chessMoves);
 
 			if (val > alpha)
 			{ //get the move ordering stats
@@ -682,7 +681,7 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 				//Search history
 				if (moves[i].quiet == true)
 				{
-					searchHistory[static_cast <int> (Board.getPiece(Moves.fromSquare(moves[i].move)))][(Moves.toSquare(moves[i].move))]
+					searchHistory[static_cast <int> (Board.getPiece(chessMoves.fromSquare(moves[i].move)))][(chessMoves.toSquare(moves[i].move))]
 						+= (depth * depth); //Depth squared to reward moves that have an alpha cutoff nearer to the root
 
 				}
@@ -693,13 +692,12 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 
 				pline->argmove[0] = moves[i].move;
 				pline->hash[0] = Board.getBoardHash();
-				std::memcpy(pline->argmove + 1, line.argmove, line.cmove * sizeof(int));
-				std::memcpy(pline->hash + 1, line.hash, line.cmove * sizeof(long long));
+				memcpy(pline->argmove + 1, line.argmove, line.cmove * sizeof(int));
+				memcpy(pline->hash + 1, line.hash, line.cmove * sizeof(long long));
 				pline->cmove = line.cmove + 1;
 
 
 				//Best Move
-				//if (depth == bestMoveDepth)
 				if (depth == pvDepth)
 				{
 					bestMove = moves[i].move; //class scoped instance variable set at top-level recursive call
@@ -714,12 +712,12 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 		}
 		else
 		{
-			Board.revertPiece(moves[i].move, Hash, Moves);
+			Board.revertPiece(moves[i].move, Hash, chessMoves);
 		}
 	}
 		if (legal == 0)
 		{
-			if (Moves.isInCheck(Board, Board.getSideInt()) == false)    // Stalemate.
+			if (chessMoves.isInCheck(Board, Board.getSideInt()) == false)    // Stalemate.
 			//if (Moves.isInCheck(Board) == false)    // Stalemate.
 			{
 				val = Defs::staleMateScore;
@@ -743,8 +741,8 @@ void Search::printNodes(LINE* pline, int val, Gameboard& Board, int depth)
 	for (int i = 0; i < pline->cmove; i++)
 	{
 		Gameboard Board;
-		std::cout << i << ":" << Board.indexToNotation(Moves.fromSquare(pline->argmove[i])) << "-"
-			<< Board.indexToNotation(Moves.toSquare(pline->argmove[i])) << " ";
+		std::cout << i << ":" << Board.indexToNotation(chessMoves.fromSquare(pline->argmove[i])) << "-"
+			<< Board.indexToNotation(chessMoves.toSquare(pline->argmove[i])) << " ";
 	}
 	std::cout << "Value " << val << " Depth " << depth;
 	std::cout << " King square White " << Board.indexToNotation(Board.getKingSquare('w')) << " Black " << Board.indexToNotation(Board.getKingSquare('b'));

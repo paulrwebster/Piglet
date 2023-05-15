@@ -1,19 +1,20 @@
 #pragma once
 #include "gameboard.h"
+#include <iostream>
 
 class Evaluation
 {
 public:
-int evaluateBoard(Gameboard &Board, char player);
+
 int evaluateBoard(Gameboard& Board); //calls evaluateWhite
-int evaluate(Defs::Pieces piece, int square);
-int evaluateWhitePerspective(Defs::Pieces piece, int square);
+int evaluate(Defs::Pieces piece, int square, Gameboard& Board);
 int getPieceVal(int pieceIndex);
+bool isEndGame(Gameboard& Board);
 
 
 private:
 	 //      empty, P,  N,  B,  R,  Q,  K,    p,  n,  b,  r,  q,   k, offboard, ep
-int pieceVal[15]{0,100,320,330,500,900,20000,100,320,330,500,900,20000,0,0}; //k was 20000
+int pieceVal[15]{0,100,320,330,500,900,20000,100,320,330,500,900,20000,0,0}; //centipawn scale
 
 //Piece square tables -- Tomasz Michniewski 
 
