@@ -84,7 +84,7 @@ int UCI()
 		Minimax->clearPreviousBestMove();
 
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.0" << std::endl;
+			std::cout << "id name Piglet 1.1" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "uciok" << std::endl;
 
@@ -123,7 +123,7 @@ int UCI()
 			else if (Line.substr(0, 23) == "position startpos moves") { //stream the moves into vector guiMoves
 				if (startpos == "") //white has moved first so no "position startpos" or  "startpos fen" supplied. 
 				{
-					startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; // moves e8d8 a1a7 d8e8";
+					startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; 
 				}
 				guiMoves.clear();
 				string buf;
@@ -160,7 +160,6 @@ int UCI()
 			Board->initBoard(); //Clear the board     
 			Moves->initialiseMoves();
 			Board->parseFen(startpos); //parse the starting position fen
-			Board->printBoard();
 			std::cout << "after parseFen " << Board->getSideInt() << " " << Board->getSide() << std::endl;
 			Board->updatePieceList();
 			Board->setKingSquares();
@@ -170,11 +169,8 @@ int UCI()
 				int move = Moves->notationToMoveRepresentation(guiMoves[m], *Board);
 				Board->movePiece(move, *Hash, *Moves);
 			}
-
-
-
-
 			int boardScore = EvalMain->evaluateBoard(*Board); //evaluate the board
+			Board->printBoard();
 			Board->printPieceList();
 
 		}
@@ -305,7 +301,7 @@ int UCI()
 						int QFailHighFirst = Minimax->getFailQHighFirst();
 						if (QFailHigh > 0 && QFailHighFirst > 0) {
 							float ordering = (static_cast<float> (QFailHighFirst) / static_cast<float> (QFailHigh)) * 100;
-							std::cout << "Depth: " << current_depth << "Quiescence Ordering: " << ordering << " % " << std::endl;
+							std::cout << "Depth: " << current_depth << " Quiescence Ordering: " << ordering << " % " << std::endl;
 						}
 						std::cout << "--------PV--------" << std::endl;
 						for (int i = 0; i < bestLine.cmove; ++i) {
@@ -333,7 +329,6 @@ int UCI()
 							<< " nodes " << numberOfNodes << " nps " << nps << " pv " << pv << std::endl;
 					}
 					std::cout << "Number of hash matches " << Minimax->getNumberOfHashMatches() 
-						<< "Number of quiescence hash matches " << Minimax->getNumberOfQHashMatches()
 						<< " Number of quiescence nodes " << Minimax->getNumberOfQNodes() << std::endl;
 				}
 
@@ -355,8 +350,8 @@ int UCI()
 
 int devStuff()
 {
-	int depth = 7;
-	bool iterativeDeepening = true;
+	int depth = 3;
+	bool iterativeDeepening = false;
 	//int moveTime = 6;
 	int moveTime = Defs::MaxSearchTime;
 	Search::searchReturn search;
@@ -368,13 +363,19 @@ int devStuff()
 	std::cout << "Generate position keys " << std::endl;
 	Hash->generateHashKeys();
 	Hash->generatePositionKey(*Board);
+
 	//set up the board
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); //opening board
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"); //opening board plus knight move
 	//Board->parseFen("rnb1k2r/pp2qppp/3p1n2/2pp2B1/1bP5/2N1P3/PP2NPP/R2QKB1R w KQkq - 0 1"); //Bluefever video 50 Middle Game Position. Demos quiescence at depth 3
-	Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase
+	//Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase
 	//Board->parseFen("4kq2/8/8/B1b5/8/1bB5/8/4KQ2 b - - 0 1");//test check end game
-	Board->printBoard();
+	Board->parseFen("4k3/Pppp1ppp/8/8/8/8/Pp1P2PP/5K2 w - - 0 1"); //test promotion
+	
+	//position fen 4k3/Pppp1ppp/8/8/8/8/Pp1P2PP/5K2 w - -0 1 moves a7a8q e8e7 f1f2 b2b1b                                                      engine.py : 1023
+	//go wtime 55189 btime 67680 winc 8000 binc 8000 movetime 12000
+	
+		Board->printBoard();
 	Board->updatePieceList();
 	Board->setKingSquares();
 	Board->printMaterial();
@@ -408,14 +409,14 @@ int devStuff()
 	int mateDepth = 0;
 	Search::LINE bestLine;
 	//Test end game
-	if (EvalMain->isEndGame(*Board) == true)
-	{
-		std::cout << "End Game " << std::endl;
-	}
-	else
-	{
-		std::cout << "Middle Game " << std::endl;
-	}
+	//if (EvalMain->isEndGame(*Board) == true)
+	//{
+	//	std::cout << "End Game " << std::endl;
+	//}
+	//else
+	//{
+	//	std::cout << "Middle Game " << std::endl;
+	//}
 
 
 	if (iterativeDeepening == false)

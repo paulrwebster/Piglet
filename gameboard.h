@@ -80,6 +80,7 @@ class Gameboard
     int parseFen(string fen);
     bool onBoard(int index);
     char pieceToAscii(Defs::Pieces p);
+    int asciiPieceToInt(char piece);
     Defs::Pieces getPiece(int square);
     void setPiece(int square, Defs::Pieces piece);
     //void movePiece(string notation);

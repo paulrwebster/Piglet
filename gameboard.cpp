@@ -1457,6 +1457,17 @@ char Gameboard::pieceToAscii(Defs::Pieces p)
 	return asciiPieces[(int)p];
 }
 
+int Gameboard::asciiPieceToInt(char piece)
+{
+	auto it = std::find(std::begin(asciiPieces), std::end(asciiPieces), piece);
+	if (it != std::end(asciiPieces))
+	{
+		int index = std::distance(asciiPieces, it);
+		return index;
+	}
+	return 0;
+}
+
 void Gameboard::setKingSquares()  //Todo replace with piecelist code
 {
 	whiteKingSquare = getPieceSquare(static_cast<int>(Defs::Pieces::K), 1);

@@ -128,11 +128,6 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 
 	}
 	
-	//add up the nodes
-	//numberOfNodes += moves.size();
-
-	
-
 	return moves;
 }
 
@@ -863,8 +858,21 @@ int MoveGen::notationToMoveRepresentation(string move, Gameboard& Board)
 	if (move.length() >= 5)
 	{
 		char promotedChar = move.at(4);
-		Defs::Pieces promotedPiece = static_cast <Defs::Pieces> (promotedChar);
-		int promoted = static_cast <int>(promotedPiece);
+		
+		//UCI always return promoted piece in lower case
+		char colour = Board.getSquareColour(from);
+		if (colour == 'w')
+		{
+			promotedChar = toupper(promotedChar);
+		}
+		else
+		{
+			promotedChar = tolower(promotedChar);
+		}
+		
+		int promoted = Board.asciiPieceToInt(promotedChar);
+		//Defs::Pieces promotedPiece = static_cast <Defs::Pieces> (Board.asciiPieceToInt(promotedChar));
+		//int promoted = static_cast <int>(promotedPiece);
 
 		int p = (promoted & 0XF); //promoted piece
 		//promoted piece
@@ -906,7 +914,7 @@ string MoveGen::moveRepresentationToNotation(int move)
 	int z = getPromoted(move);
 	string from = Board.indexToNotation(f);
 	string to = Board.indexToNotation(t);
-	char promoted = Board.pieceToAscii(static_cast<Defs::Pieces>(z));
+	char promoted = Board.pieceToAscii(static_cast<Defs::Pieces>(z));  //Todo:: should i tolower() this for UCI?
 	string moveString = from + to;
 	if (promoted != '-') moveString = moveString + promoted;
 	return moveString;
