@@ -67,13 +67,12 @@ int UCI()
 	std::cout << fixed << setprecision(0);
 
 	while (getline(cin, Line)) {
-		//clear
-		//Hash->clearHashTable(); Just flush the hash table on ucinewgame
-		Minimax->clearBestLine();
-		Minimax->clearBestMove();
-		Moves->initialiseMoves();
-		Minimax->clearPreviousBestLine();
-		Minimax->clearPreviousBestMove();
+		//can't do this here or will clear on ponderhit etc.
+		//Minimax->clearBestLine();
+		//Minimax->clearBestMove();
+		//Moves->initialiseMoves();
+		//Minimax->clearPreviousBestLine();
+		//Minimax->clearPreviousBestMove();
 
 		if (Line == "uci") {
 			std::cout << "id name Piglet 1.2" << std::endl;
@@ -106,6 +105,11 @@ int UCI()
 			Moves->setAttacksArray();
 			Minimax->initMoveGenMvvLva();
 			//Clear
+			Minimax->clearBestLine();
+			Minimax->clearBestMove();
+			Moves->initialiseMoves();
+			Minimax->clearPreviousBestLine();
+			Minimax->clearPreviousBestMove();
 			Moves->initialiseMoves();
 			Hash->clearHashTable();
 			guiMoves.clear(); //Clear list of moves sent by gui as startpos moves
@@ -216,7 +220,7 @@ int UCI()
 
 		else if (Line == "ponderhit")
 		{
-			if (debug == true) { std::cout << "Loop hsd received ponderhit " << std::endl; }
+			if (debug == true) { std::cout << "Loop has received ponderhit " << std::endl; }
 			Minimax->stopPondering();
 			//reset the clock
 			start = std::chrono::steady_clock::now();
@@ -225,6 +229,8 @@ int UCI()
 
 		else if (Line.substr(0, 3) == "go ") {
 			// Received a command like: "go wtime 300000 btime 300000 winc 0 binc 0"
+			
+			
 			//parse the string
 			goParts.clear();
 			string buffer;
@@ -298,8 +304,10 @@ void iterate(int depth, int moveTime)
 {
 	int bestMove = Defs::NoMove;
 	int ponderMove = Defs::NoMove;
+	// clear the best moves and best lines
+	
+	
 	Search::LINE bestLine;
-
 	//get starting timepoint
 	start = std::chrono::steady_clock::now();
 	Minimax->resetNumberOfNodes();
@@ -315,10 +323,11 @@ void iterate(int depth, int moveTime)
 	//Hash->clearHashTable(); //only flush hash table on ucinewgame
 	Minimax->clearBestLine();
 	Minimax->clearBestMove();
-
-	Moves->initialiseMoves();
 	Minimax->clearPreviousBestLine();
 	Minimax->clearPreviousBestMove();
+
+	Moves->initialiseMoves();//this clears the vector of moves in MoveGen, plus set attacks array
+	
 
 
 	//iterative deepening stuff
@@ -358,17 +367,19 @@ void iterate(int depth, int moveTime)
 			{
 				std::cout << "stop command received by engine " << std::endl;
 			}
-			bestMove = Minimax->getPreviousBestMove();
+			//bestMove = Minimax->getPreviousBestMove();
 			bestLine = Minimax->getPreviousBestLine();
-			if (bestLine.cmove >= 1) { ponderMove = bestLine.argmove[1]; };
+			if (bestLine.cmove >= 1) { bestMove = bestLine.argmove[0]; }
+			if (bestLine.cmove >= 2) { ponderMove = bestLine.argmove[1]; }
 			search_depth = current_depth; //stop loop falling through to maxdepth if timed or search_depth if by depth
 		}
 		else
 		{
 
-			bestMove = Minimax->getBestMoveFound();
+			//bestMove = Minimax->getBestMoveFound();
 			bestLine = Minimax->getBestLine();
-			if (bestLine.cmove >= 1) { ponderMove = bestLine.argmove[1]; };
+			if (bestLine.cmove >= 1) { bestMove = bestLine.argmove[0]; }
+			if (bestLine.cmove >= 2) { ponderMove = bestLine.argmove[1]; };
 			Minimax->setPreviousBestLine(bestLine); //copy best line into previous best line for pv sorting
 			Minimax->setPreviousBestMove(bestMove);
 			if (debug == true)
@@ -463,8 +474,6 @@ void iterate(int depth, int moveTime)
 		std::cout << std::endl << "bestmove " << bestMoveNotation << std::endl;
 	}
 	
-	bestMove = Defs::NoMove;
-
 }
 
 
