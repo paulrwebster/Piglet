@@ -916,6 +916,9 @@ string MoveGen::moveRepresentationToNotation(int move)
 	string to = Board.indexToNotation(t);
 	char promoted = Board.pieceToAscii(static_cast<Defs::Pieces>(z));  //Todo:: should i tolower() this for UCI?
 	string moveString = from + to;
+	if (moveString == "a1a1") { 
+		moveString = "0000"; 
+	} //null move
 	if (promoted != '-') moveString = moveString + promoted;
 	return moveString;
 }

@@ -20,15 +20,7 @@ public:
 		unsigned long long hash[Defs::MaxSearchDepth]{}; //holds the board position hash 
 	}   LINE;
 
-	struct searchReturn
-	{
-		int val= 0;
-		long long nodes = 0;
-	};
-	
-
-	int debug = 0;
-	int negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate);
+	int negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate);
 	int quiescence(Gameboard& Board, Hashing& QHash, int alpha, int beta);
 	int quiescence(Gameboard& Board, Hashing& QHash, int depth, int alpha, int beta, int timePerMove); //depth limited quiescence
 	int getBestMoveFound();
@@ -37,7 +29,6 @@ public:
 	void setPreviousBestLine(LINE bestLine);
 	LINE getBestLine();
 	LINE getPreviousBestLine();
-	void setBestMoveDepth(int depth);
 	size_t getNumberOfNodes();
 	size_t getNumberOfQNodes();
 	void resetNumberOfNodes();
@@ -64,11 +55,20 @@ public:
 	void clearPreviousBestLine();
 	void stopEngine();
 	void startEngine();
-
-	
+	void startPondering();
+	void stopPondering();
+	bool isPondering();
+	bool isStopped();
+	bool isPonderhit();
+	void setPonderhit(bool hit);
+	void setInfinite(bool isInfinite);
+	bool isInfinite();
 
 private:
 	bool stop = false;
+	bool pondering = false;
+	bool ponderhit = false;
+	bool infinite = false;
 	size_t numberOfNodes = 0;
 	size_t numberOfQNodes = 0; //quiescence nodes
 	size_t numberOfHashMatches = 0;
@@ -77,7 +77,6 @@ private:
 	int previousBestMove = 0;
 	LINE bestLine;
 	LINE previousBestLine;
-	int bestMoveDepth = 4;
 	int quiescenceDepth = 6;
 	int perftLeafNodes = 0;
 	void printNodes(LINE* pline, int val, Gameboard& Board, int depth);

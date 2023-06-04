@@ -8,13 +8,16 @@ Evaluation Eval;
 extern int killers[2][Defs::MaxSearchDepth];
 extern int searchHistory[15][128]; //[number of pieces][number of squares]
 extern chrono::steady_clock::time_point start;
+extern bool debug;
 
 void Search::stopEngine()
 {
+	if (debug == true) { std::cout << "stopEngine() called " << std::endl; }
 	stop = true;
 }
 void Search::startEngine()
 {
+	if (debug == true) { std::cout << "startEngine() called " << std::endl; }
 	stop = false;
 }
 
@@ -74,8 +77,8 @@ void Search::clearSearch()
 			searchHistory[i][j] = 0;
 		}
 
-	//time start and bool stop
-	startEngine();
+	//bool stop set to false
+	//startEngine();
 }
 
 void Search::resetFailHigh()
@@ -138,11 +141,6 @@ Search::LINE Search::getPreviousBestLine()
 void Search::setPreviousBestLine(Search::LINE bestLine)
 {
 	previousBestLine = bestLine;
-}
-
-void Search::setBestMoveDepth(int depth)
-{
-	bestMoveDepth = depth;
 }
 
 size_t Search::getNumberOfNodes()
@@ -564,8 +562,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 }
 
 
-
-int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate)
+int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate)
 {
 	int legal = 0;
 	int val = 0;
@@ -633,20 +630,37 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 	{
 		if (stop == true)
 		{
+			if (debug == true) { std::cout << "negamax is returning Defs::stopEngine " << std::endl; }
 			val = Defs::StopEngine;
 			return val;
 		}
-		std::chrono::duration <double>(timeElapsed) = std::chrono::steady_clock::now() - start;
-		if ((timeElapsed.count() - timePerMove) > 0) {
+		if (ponderhit == true && pvDepth > ponderDepth)
+		{
+			if (debug == true) { std::cout << "ponderhit has triggered Defs::stopEngine " << std::endl; }
 			val = Defs::StopEngine;
 			return val;
+		}
+
+
+		std::chrono::duration <double>(timeElapsed) = std::chrono::steady_clock::now() - start;
+		if ((timeElapsed.count() - timePerMove) > 0) {
+			if (isPondering() == false)
+			{
+				val = Defs::StopEngine;
+				return val;
+			}
 		}
 		Board.movePiece(moves[i].move, Hash, chessMoves);
 		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			legal++;
 			//numberOfNodes++;
-			val = -negamax(Board, Hash, depth - 1, pvDepth, -beta, -alpha, &line, timePerMove, mate - 1);
+			val = -negamax(Board, Hash, depth - 1, pvDepth, ponderDepth, -beta, -alpha, &line, timePerMove, mate - 1);
+			
+			if (val == Defs::StopEngine)
+			{
+				return val;
+			}
 			
 			Board.revertPiece(moves[i].move, Hash, chessMoves);
 
@@ -749,3 +763,46 @@ void Search::printNodes(LINE* pline, int val, Gameboard& Board, int depth)
 
 }
 
+void Search::startPondering()
+{
+	if (debug == true) { std::cout << "startPondering() called " << std::endl; }
+	pondering = true;
+}
+void Search::stopPondering()
+{
+	if (debug == true) { std::cout << "stopPondering() called " << std::endl; }
+	pondering = false;
+}
+
+bool Search::isPondering()
+{
+	return pondering;
+}
+
+bool Search::isStopped()
+{
+	return stop;
+}
+
+bool Search::isPonderhit()
+{
+	return ponderhit;
+}
+
+void Search::setPonderhit(bool hit)
+{
+	if (debug == true) {
+		std::cout << "setPonderhit() called " << std::endl;
+	}
+	ponderhit = hit;
+}
+
+void Search::setInfinite(bool isInfinite)
+{
+	infinite = isInfinite;
+}
+
+bool Search::isInfinite()
+{
+	return infinite;
+}

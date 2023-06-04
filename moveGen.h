@@ -28,6 +28,11 @@ public:
 		{
 			return score < mv2.score;
 		} //for sorting structure
+
+		mvlist(int move, int score, bool quiet)
+			: move(move), score(score), quiet(quiet)
+		{
+		}
 	} moveList;
 
 	
