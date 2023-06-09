@@ -562,7 +562,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 }
 
 
-int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate)
+int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate)
 {
 	int legal = 0;
 	int val = 0;
@@ -628,6 +628,11 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 
 	for (int i = 0; i < moves.size(); ++i)
 	{
+		if (st.stop_requested()) {
+			std::cout << "stop token received by negamax " << std::endl;
+			return Defs::StopEngine;
+		}
+
 		if (stop == true)
 		{
 			if (debug == true) { std::cout << "negamax is returning Defs::stopEngine " << std::endl; }
@@ -655,13 +660,16 @@ int Search::negamax(Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int
 		{
 			legal++;
 			//numberOfNodes++;
-			val = -negamax(Board, Hash, depth - 1, pvDepth, ponderDepth, -beta, -alpha, &line, timePerMove, mate - 1);
+			val = -negamax(st, Board, Hash, depth - 1, pvDepth, ponderDepth, -beta, -alpha, &line, timePerMove, mate - 1);
 			
 			if (val == Defs::StopEngine)
 			{
 				return val;
 			}
 			
+			
+
+
 			Board.revertPiece(moves[i].move, Hash, chessMoves);
 
 			if (val > alpha)

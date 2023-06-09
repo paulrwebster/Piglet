@@ -50,40 +50,57 @@ int main()
 	delete Minimax;
 	delete Hash;
 	delete CheckHash;
+	std::cout << "Clean up complete " << std::endl;
 	return 0;
 }
 
 int UCI()
 {
-//setoption name Ponder value false
+	//setoption name Ponder value false
 
 	int depth = Defs::MaxSearchDepth - 1; //will be overriden by go depth command from gui
 	int moveTime = 0;
+	int wtime = 0;
+	int btime = 0;
+	int winc = 0;
+	int binc = 0;
+	int movestogo = Defs::movesToGo;
+	int movestimebuffer = Defs::moveTimeBuffer;
 	string Line; //to read the command given by the GUI
 	string startpos; //hold the opening position fen
-	//debug = true;
-
+	std::stop_source ss;
+	std::stop_token st = ss.get_token(); //stop token to stop iterate jthread
 	std::cout.setf(ios::unitbuf);// Make sure that the outputs are sent straight away to the GUI
 	std::cout << fixed << setprecision(0);
 
 	while (getline(cin, Line)) {
-		//can't do this here or will clear on ponderhit etc.
-		//Minimax->clearBestLine();
-		//Minimax->clearBestMove();
-		//Moves->initialiseMoves();
-		//Minimax->clearPreviousBestLine();
-		//Minimax->clearPreviousBestMove();
 
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.2" << std::endl;
+			std::cout << "id name Piglet 1.3" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "uciok" << std::endl;
 
 		}
+
+
+
 		else if (Line == "quit") {
-			std::terminate();
-			break;
+			//break from loop and let main() clean up and terminate
+			std::cout << "quit received " << std::endl;
+			//Minimax->stopEngine();
+			//Minimax->stopPondering();
+			//Minimax->setPonderhit(false);
+
+			try {
+				//	exit(0);
+				ss.request_stop();
+				return 0;
+			}
+			catch (std::exception& e) {
+				std::cout << "exception " << e.what() << std::endl;
+			}
+
 		}
 
 		else if (Line == "debug on")
@@ -204,11 +221,7 @@ int UCI()
 			Minimax->setPonderhit(false);
 			std::cout << "stop received " << std::endl;
 		}
-		else if (Line == "quit") {
-			//break from loop and let main() clean up and terminate
-			Minimax->stopEngine();
-			break;
-		}
+
 		else if (Line == "print piecelist")
 		{
 			Board->printPieceList();
@@ -227,10 +240,11 @@ int UCI()
 			Minimax->setPonderhit(true);
 		}
 
-		else if (Line.substr(0, 3) == "go ") {
+		else if (Line.substr(0, 3) == "go ")
+		{
 			// Received a command like: "go wtime 300000 btime 300000 winc 0 binc 0"
-			
-			
+
+
 			//parse the string
 			goParts.clear();
 			string buffer;
@@ -245,68 +259,93 @@ int UCI()
 				long long perftLeafNodes = Minimax->divide(*Board, *Hash, depth);
 				std::cout << "Perft returns " << perftLeafNodes << std::endl;
 			}
+			else if (goParts[1] == "ponder")
+			{
+				Minimax->startPondering();
+
+				if (goParts[2] == "movetime")
+				{
+					depth = Defs::MaxSearchDepth;
+					moveTime = static_cast <int> (stoi(goParts[3]) / 1000);
+				}
+
+				if (goParts[2] == "depth")
+				{
+					depth = stoi(goParts[3]);
+					moveTime = Defs::MaxSearchTime;
+				}
+
+				if (goParts[2] == "infinite")
+				{
+					depth = Defs::MaxSearchDepth;
+					moveTime = Defs::MaxSearchTime;
+				}
+			}
 			else
 			{
-				if (goParts[1] == "movetime")
+				for (int i = 0; i < goParts.size(); i++)
 				{
-					depth = Defs::MaxSearchDepth;
-					moveTime = static_cast <int> (stoi(goParts[2]) / 1000);
-				}
-
-				if (goParts[1] == "depth")
-				{
-					depth = stoi(goParts[2]);
-					moveTime = Defs::MaxSearchTime;
-				}
-
-				if (goParts[1] == "ponder")
-				{
-					Minimax->startPondering();
-
-					if (goParts[2] == "movetime")
+					int j = i + 1;
+					if (goParts[i] == "movetime")
 					{
 						depth = Defs::MaxSearchDepth;
-						moveTime = static_cast <int> (stoi(goParts[3]) / 1000);
+						moveTime = static_cast <int> (stoi(goParts[j]) / 1000);
 					}
-
-					if (goParts[2] == "depth")
+					if (goParts[i] == "depth")
 					{
-						depth = stoi(goParts[3]);
+						depth = stoi(goParts[j]);
 						moveTime = Defs::MaxSearchTime;
 					}
-
-					if (goParts[2] == "infinite")
+					if (goParts[i] == "infinite")
 					{
+						Minimax->setInfinite(true);
+						moveTime = Defs::MaxSearchTime;
 						depth = Defs::MaxSearchDepth;
-						moveTime = Defs::MaxSearchTime;
 					}
+					if (goParts[i] == "wtime") wtime = stoi(goParts[j]);
+					if (goParts[i] == "btime") btime = stoi(goParts[j]);
+					if (goParts[i] == "winc") winc = stoi(goParts[j]);
+					if (goParts[i] == "binc") binc = stoi(goParts[j]);
+					if (goParts[i] == "movestogo") movestogo = stoi(goParts[j]);
 				}
 
-				if (goParts[1] == "infinite")
-				{
-					Minimax->setInfinite(true);
-					moveTime = Defs::MaxSearchTime;
-					depth = Defs::MaxSearchDepth;
-				}
-
-				//std::async(std::launch::async, iterate, depth, moveTime, debug);
-				std::jthread iteration(iterate, depth, moveTime);
-				//std::thread iteration(iterate, depth, moveTime);
-				iteration.detach();
-				//iterate(depth, moveTime);
 			}
+			int timeAllowed = calcMoveTime(moveTime, wtime, btime, winc, binc, movestogo);
+			if (debug)
+			{
+				std::cout << "Time allowed " << timeAllowed << std::endl;
+			}
+			//std::async(std::launch::async, iterate, depth, moveTime, debug);
+			
+			
+			std::jthread iteration(iterate, st, depth, timeAllowed);
+
+			//std::thread iteration(iterate, depth, moveTime);
+			//iteration.detach();
+			//iterate(depth, timeAllowed);
 		}
+
 	}
 	return 0;
 }
 
-void iterate(int depth, int moveTime)
+int calcMoveTime(int moveTime, int wtime, int btime, int winc, int binc, int movestogo)
+{
+	int timeAllowed = 0;
+	if (moveTime > 0) timeAllowed = moveTime;
+	char side = Board->getSide();
+	if (side == 'w' && (wtime + winc) > 0) timeAllowed = (wtime + winc) / movestogo / 1000;
+	if (side == 'b' && (btime + binc) > 0) timeAllowed = (btime + binc) / movestogo / 1000;
+	return timeAllowed;
+}
+
+void iterate(std::stop_token st, int depth, int moveTime)
 {
 	int bestMove = Defs::NoMove;
 	int ponderMove = Defs::NoMove;
 	// clear the best moves and best lines
-	
-	
+
+
 	Search::LINE bestLine;
 	//get starting timepoint
 	start = std::chrono::steady_clock::now();
@@ -327,7 +366,7 @@ void iterate(int depth, int moveTime)
 	Minimax->clearPreviousBestMove();
 
 	Moves->initialiseMoves();//this clears the vector of moves in MoveGen, plus set attacks array
-	
+
 
 
 	//iterative deepening stuff
@@ -336,6 +375,11 @@ void iterate(int depth, int moveTime)
 	Minimax->startEngine();
 	for (int current_depth = 1; current_depth <= search_depth; current_depth++)
 	{
+		if (st.stop_requested()) {
+			std::cout << "stop token received by thread " << std::endl;
+			return;
+		}
+
 		Minimax->clearSearch();  //yes
 		Minimax->resetNumberOfNodes(); //yes
 		Minimax->resetNumberOfHashMatches();
@@ -348,7 +392,7 @@ void iterate(int depth, int moveTime)
 		//&Search::negamax is member function pointer, Minimax is a pointer to the object to call the function for
 		//auto future1 = std::async(std::launch::async, &Search::negamax, Minimax, std::ref(*Board), std::ref(*Hash), current_depth, current_depth, ponder_depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
 		//retVal = future1.get();
-		retVal = Minimax->negamax(*Board, *Hash, current_depth, current_depth, ponder_depth, 
+		retVal = Minimax->negamax(st ,*Board, *Hash, current_depth, current_depth, ponder_depth,
 			-Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
 
 		double mateDepth = 0;
@@ -454,25 +498,25 @@ void iterate(int depth, int moveTime)
 		if (Minimax->isPondering() == true && search_depth >= depth) { search_depth++; }
 	}
 
-	bestMove = Minimax->getBestMoveFound();
-	string bestMoveNotation = Moves->moveRepresentationToNotation(bestMove);
-	string ponderMoveNotation = Moves->moveRepresentationToNotation(ponderMove);
-	Board->movePiece(bestMove, *Hash, *Moves);
-	if (debug == true)
-	{
-		//std::cout << "string bestMove is " << bestMoveNotation << std::endl;
-		//Board->printBoard();
-		//Board->printPieceList();
-		//Moves->printMoveRepresentation(bestMove);
-	}
-	if (ponderOption == true && ponderMove != Defs::NoMove)
-	{
-		std::cout << std::endl << "bestmove " << bestMoveNotation << " ponder " << ponderMoveNotation << std::endl;
-	}
-	else
-	{
-		std::cout << std::endl << "bestmove " << bestMoveNotation << std::endl;
-	}
+		bestMove = Minimax->getBestMoveFound();
+		string bestMoveNotation = Moves->moveRepresentationToNotation(bestMove);
+		string ponderMoveNotation = Moves->moveRepresentationToNotation(ponderMove);
+		Board->movePiece(bestMove, *Hash, *Moves);
+		if (debug == true)
+		{
+			//std::cout << "string bestMove is " << bestMoveNotation << std::endl;
+			//Board->printBoard();
+			//Board->printPieceList();
+			//Moves->printMoveRepresentation(bestMove);
+		}
+		if (ponderOption == true && ponderMove != Defs::NoMove)
+		{
+			std::cout << std::endl << "bestmove " << bestMoveNotation << " ponder " << ponderMoveNotation << std::endl;
+		}
+		else
+		{
+			std::cout << std::endl << "bestmove " << bestMoveNotation << std::endl;
+		}
 	
 }
 
@@ -483,7 +527,6 @@ int devStuff()
 	bool iterativeDeepening = false;
 	//int moveTime = 6;
 	int moveTime = Defs::MaxSearchTime;
-
 	Board->initSquare(); //Initialise squares
 	Board->initBoard(); //Clear the board    
 	int cFlag = Board->getCastleFlag();
@@ -491,7 +534,8 @@ int devStuff()
 	std::cout << "Generate position keys " << std::endl;
 	Hash->generateHashKeys();
 	Hash->generatePositionKey(*Board);
-
+	std::stop_source ss;
+	std::stop_token st = ss.get_token();
 	//set up the board
 	Board->parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); //opening board
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"); //opening board plus knight move
@@ -499,7 +543,7 @@ int devStuff()
 	//Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase
 	//Board->parseFen("4kq2/8/8/B1b5/8/1bB5/8/4KQ2 b - - 0 1");//test check end game
 	//Board->parseFen("4k3/Pppp1ppp/8/8/8/8/Pp1P2PP/5K2 w - - 0 1"); //test promotion
-
+	//Board->parseFen("4kqr1/8/8/8/8/8/8/2K5 b - - 0 1");//test mate
 	//position fen 4k3/Pppp1ppp/8/8/8/8/Pp1P2PP/5K2 w - -0 1 moves a7a8q e8e7 f1f2 b2b1b                                                      engine.py : 1023
 	//go wtime 55189 btime 67680 winc 8000 binc 8000 movetime 12000
 
@@ -551,7 +595,7 @@ int devStuff()
 		//======================No iterative deepening stuff==========================
 
 		string parentMove = "";
-		retVal = Minimax->negamax(*Board, *Hash, depth, depth, depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
+		retVal = Minimax->negamax( st,*Board, *Hash, depth, depth, depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
 		std::cout << "from main.cpp negamax returns retval " << retVal << " bestmove " << Minimax->getBestMoveFound() << " " << Moves->moveRepresentationToNotation(Minimax->getBestMoveFound()) << std::endl;
 
 		mateDepth = 0;
@@ -582,7 +626,7 @@ int devStuff()
 			{
 				linePtr.argmove[i] = 0;
 			}
-			retVal = Minimax->negamax(*Board, *Hash, current_depth, current_depth, current_depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
+			retVal = Minimax->negamax(st, *Board, *Hash, current_depth, current_depth, current_depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
 
 			std::cout << "from main.cpp negamax returns retval " << retVal << " bestmove " << Minimax->getBestMoveFound() << " " << Moves->moveRepresentationToNotation(Minimax->getBestMoveFound()) << std::endl;
 

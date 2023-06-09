@@ -25,6 +25,8 @@ public:
 	static const int mateScore = 50000;
 	static const int staleMateScore = 0;
 	static const int infinity = 999999;
+	static const int movesToGo = 24;
+	static const int moveTimeBuffer = 500; //milliseconds
 };
 
 #endif
