@@ -76,7 +76,7 @@ int UCI()
 	while (getline(cin, Line)) {
 
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.3" << std::endl;
+			std::cout << "id name Piglet 1.31" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "uciok" << std::endl;
@@ -216,10 +216,10 @@ int UCI()
 			}
 		}
 		else if (Line == "stop") {
+			std::cout << "stop received " << std::endl;
 			Minimax->stopEngine();
 			Minimax->stopPondering();
 			Minimax->setPonderhit(false);
-			std::cout << "stop received " << std::endl;
 		}
 
 		else if (Line == "print piecelist")
@@ -233,7 +233,8 @@ int UCI()
 
 		else if (Line == "ponderhit")
 		{
-			if (debug == true) { std::cout << "Loop has received ponderhit " << std::endl; }
+			//if (debug == true) { std::cout << "Loop has received ponderhit " << std::endl; }
+			std::cout << "Ponderhit received" << std::endl;
 			Minimax->stopPondering();
 			//reset the clock
 			start = std::chrono::steady_clock::now();
@@ -311,17 +312,17 @@ int UCI()
 
 			}
 			int timeAllowed = calcMoveTime(moveTime, wtime, btime, winc, binc, movestogo);
-			if (debug)
-			{
+			//if (debug)
+			//{
 				std::cout << "Time allowed " << timeAllowed << std::endl;
-			}
+			//}
 			//std::async(std::launch::async, iterate, depth, moveTime, debug);
 			
 			
 			std::jthread iteration(iterate, st, depth, timeAllowed);
 
 			//std::thread iteration(iterate, depth, moveTime);
-			//iteration.detach();
+			iteration.detach();
 			//iterate(depth, timeAllowed);
 		}
 
