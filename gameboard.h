@@ -89,4 +89,4 @@ class Gameboard
     char swapSide();
 };
 
-#endif;
+#endif

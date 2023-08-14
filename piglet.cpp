@@ -35,6 +35,8 @@ bool ponderOption = false;
 vector<string> guiMoves; //holds the moves list sent by the gui as part of startpos moves command
 vector<string> goParts;  //holds the parsed parts of the go string
 
+std::jthread iteration;
+
 int main()
 {
 	UCI();
@@ -74,20 +76,20 @@ int UCI()
 	std::cout << fixed << setprecision(0);
 
 	while (getline(cin, Line)) {
-
+		std::cout << "Input received: " << Line << std::endl;
 		if (Line == "uci") {
 			std::cout << "id name Piglet 1.31" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
+			std::cout << "option name Threads type spin default 1 min 1 max 512" << std::endl;
 			std::cout << "uciok" << std::endl;
-
 		}
 
 
 
 		else if (Line == "quit") {
 			//break from loop and let main() clean up and terminate
-			std::cout << "quit received " << std::endl;
+			//std::cout << "quit received " << std::endl;
 			//Minimax->stopEngine();
 			//Minimax->stopPondering();
 			//Minimax->setPonderhit(false);
@@ -216,7 +218,7 @@ int UCI()
 			}
 		}
 		else if (Line == "stop") {
-			std::cout << "stop received " << std::endl;
+			//std::cout << "stop received " << std::endl;
 			Minimax->stopEngine();
 			Minimax->stopPondering();
 			Minimax->setPonderhit(false);
@@ -233,8 +235,7 @@ int UCI()
 
 		else if (Line == "ponderhit")
 		{
-			//if (debug == true) { std::cout << "Loop has received ponderhit " << std::endl; }
-			std::cout << "Ponderhit received" << std::endl;
+			if (debug == true) { std::cout << "Ponderhit received " << std::endl; }
 			Minimax->stopPondering();
 			//reset the clock
 			start = std::chrono::steady_clock::now();
@@ -319,8 +320,8 @@ int UCI()
 			//std::async(std::launch::async, iterate, depth, moveTime, debug);
 			
 			
-			std::jthread iteration(iterate, st, depth, timeAllowed);
-
+			//std::jthread iteration(iterate, st, depth, timeAllowed);
+			iteration = std::jthread (iterate, st, depth, timeAllowed);
 			//std::thread iteration(iterate, depth, moveTime);
 			iteration.detach();
 			//iterate(depth, timeAllowed);
@@ -337,11 +338,13 @@ int calcMoveTime(int moveTime, int wtime, int btime, int winc, int binc, int mov
 	char side = Board->getSide();
 	if (side == 'w' && (wtime + winc) > 0) timeAllowed = (wtime + winc) / movestogo / 1000;
 	if (side == 'b' && (btime + binc) > 0) timeAllowed = (btime + binc) / movestogo / 1000;
+	if (timeAllowed > 30) { timeAllowed = 30; }//keep it down to 30 seconds
 	return timeAllowed;
 }
 
 void iterate(std::stop_token st, int depth, int moveTime)
 {
+	//std::cout << "New thread " << std::endl;
 	int bestMove = Defs::NoMove;
 	int ponderMove = Defs::NoMove;
 	// clear the best moves and best lines
@@ -377,7 +380,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 	for (int current_depth = 1; current_depth <= search_depth; current_depth++)
 	{
 		if (st.stop_requested()) {
-			std::cout << "stop token received by thread " << std::endl;
+			//std::cout << "stop token received by thread " << std::endl;
 			return;
 		}
 
@@ -390,8 +393,10 @@ void iterate(std::stop_token st, int depth, int moveTime)
 			linePtr.argmove[i] = 0;
 		}
 
+
+
 		//&Search::negamax is member function pointer, Minimax is a pointer to the object to call the function for
-		//auto future1 = std::async(std::launch::async, &Search::negamax, Minimax, std::ref(*Board), std::ref(*Hash), current_depth, current_depth, ponder_depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
+		//auto future1 = std::async(std::launch::async, &Search::negamax, Minimax, st, std::ref(*Board), std::ref(*Hash), current_depth, current_depth, ponder_depth, -Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
 		//retVal = future1.get();
 		retVal = Minimax->negamax(st ,*Board, *Hash, current_depth, current_depth, ponder_depth,
 			-Defs::infinity, Defs::infinity, &linePtr, moveTime, Defs::MaxSearchDepth);
@@ -638,7 +643,7 @@ int devStuff()
 			}
 			if (retVal == Defs::StopEngine)
 			{
-				std::cout << "stop command received by engine " << std::endl;
+				if (debug == true) { std::cout << "stop command received by engine " << std::endl; }
 				bestMove = Minimax->getPreviousBestMove();
 				break;
 			}

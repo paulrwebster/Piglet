@@ -9,7 +9,7 @@
 #include <cstdlib> //for atoi
 #include <bitset>
 #include <sstream>
-
+#include <algorithm> //std::find
 
 Gameboard::Gameboard()
 {

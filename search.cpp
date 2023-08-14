@@ -636,6 +636,7 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		if (stop == true)
 		{
 			if (debug == true) { std::cout << "negamax is returning Defs::stopEngine " << std::endl; }
+			std::cout << "negamax is returning Defs::stopEngine " << std::endl;
 			val = Defs::StopEngine;
 			return val;
 		}
