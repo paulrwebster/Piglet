@@ -138,9 +138,20 @@ Search::LINE Search::getPreviousBestLine()
 {
 	return previousBestLine;
 }
+
+int Search::getPreviousRetval()
+{
+	return previousRetVal;
+}
+
 void Search::setPreviousBestLine(Search::LINE bestLine)
 {
 	previousBestLine = bestLine;
+	
+}
+void Search::setPreviousRetVal(int retVal)
+{
+	previousRetVal = retVal;
 }
 
 size_t Search::getNumberOfNodes()

@@ -78,7 +78,7 @@ int UCI()
 	while (getline(cin, Line)) {
 		std::cout << "Input received: " << Line << std::endl;
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.31" << std::endl;
+			std::cout << "id name Piglet 1.3.2" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "option name Threads type spin default 1 min 1 max 512" << std::endl;
@@ -419,6 +419,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 			}
 			//bestMove = Minimax->getPreviousBestMove();
 			bestLine = Minimax->getPreviousBestLine();
+			retVal = Minimax->getPreviousRetval();
 			if (bestLine.cmove >= 1) { bestMove = bestLine.argmove[0]; }
 			if (bestLine.cmove >= 2) { ponderMove = bestLine.argmove[1]; }
 			search_depth = current_depth; //stop loop falling through to maxdepth if timed or search_depth if by depth
@@ -432,6 +433,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 			if (bestLine.cmove >= 2) { ponderMove = bestLine.argmove[1]; };
 			Minimax->setPreviousBestLine(bestLine); //copy best line into previous best line for pv sorting
 			Minimax->setPreviousBestMove(bestMove);
+			Minimax->setPreviousRetVal(retVal);
 			if (debug == true)
 			{
 				//std::cout << "Depth " << current_depth << " Best Move " << Moves->moveRepresentationToNotation(bestMove) << " Score " << retVal << std::endl;
@@ -460,6 +462,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 				std::cout << std::endl;
 			}
 		}
+		typedef std::chrono::milliseconds ms;
 		chrono::steady_clock::time_point stop = std::chrono::steady_clock::now();
 		chrono::duration<double> time_span = std::chrono::duration_cast<chrono::duration<double>>(stop - start);
 		size_t numberOfNodes = Minimax->getNumberOfNodes();
@@ -472,12 +475,14 @@ void iterate(std::stop_token st, int depth, int moveTime)
 
 		if (mateDepth == 0)
 		{
-			std::cout << "info depth " << current_depth << " score cp " << retVal << " time " << (int)time_span.count()
+			ms duration_ms = std::chrono::duration_cast<ms>(time_span);
+			std::cout << "info depth " << current_depth << " score cp " << retVal << " time " << duration_ms.count()
 				<< " nodes " << numberOfNodes << " nps " << nps << " pv " << pv << std::endl;
 		}
 		else
 		{
-			std::cout << "info depth " << current_depth << " score mate " << static_cast <int> (mateDepth) << " time " << (int)time_span.count()
+			ms duration_ms = std::chrono::duration_cast<ms>(time_span);
+			std::cout << "info depth " << current_depth << " score mate " << static_cast <int> (mateDepth) << " time " << duration_ms.count()
 				<< " nodes " << numberOfNodes << " nps " << nps << " pv " << pv << std::endl;
 		}
 		if (debug == true)
@@ -544,6 +549,7 @@ int devStuff()
 	std::stop_token st = ss.get_token();
 	//set up the board
 	Board->parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); //opening board
+	//Board->parseFen("q4rk1/5p1p/8/5Q2/8/6P1/p4P1P/6K1 w - - 0 1"); //threefold repitition 
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"); //opening board plus knight move
 	//Board->parseFen("rnb1k2r/pp2qppp/3p1n2/2pp2B1/1bP5/2N1P3/PP2NPP/R2QKB1R w KQkq - 0 1"); //Bluefever video 50 Middle Game Position. Demos quiescence at depth 3
 	//Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase
@@ -653,6 +659,7 @@ int devStuff()
 				bestLine = Minimax->getBestLine();
 				Minimax->setPreviousBestLine(bestLine); //copy best line into previous nest tline for pv sorting
 				Minimax->setPreviousBestMove(bestMove);
+				Minimax->setPreviousRetVal(retVal);
 
 				std::cout << "info Depth " << current_depth << " Best Move " << Moves->moveRepresentationToNotation(bestMove) << " Score " << retVal << std::endl;
 				std::cout << "Number of nodes " << Minimax->getNumberOfNodes() << " Quiescence nodes " << Minimax->getNumberOfQNodes() << " "

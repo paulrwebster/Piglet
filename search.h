@@ -28,8 +28,10 @@ public:
 	int getPreviousBestMove();
 	void setPreviousBestMove(int bestMove);
 	void setPreviousBestLine(LINE bestLine);
+	void setPreviousRetVal(int retVal);
 	LINE getBestLine();
 	LINE getPreviousBestLine();
+	int getPreviousRetval();
 	size_t getNumberOfNodes();
 	size_t getNumberOfQNodes();
 	void resetNumberOfNodes();
@@ -78,6 +80,7 @@ private:
 	int previousBestMove = 0;
 	LINE bestLine;
 	LINE previousBestLine;
+	int previousRetVal = 0;
 	int quiescenceDepth = 6;
 	int perftLeafNodes = 0;
 	void printNodes(LINE* pline, int val, Gameboard& Board, int depth);
