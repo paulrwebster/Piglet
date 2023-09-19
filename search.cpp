@@ -592,17 +592,38 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		pvDepth++;
 	}
 
-	if (hashVal != VALUNKNOWN)
+	//if move has occurred twice before and we will be invoking 3 times repetition, set val to zero if positive
+	
+	if (Hash.probeHistory(Hash.getZobristKey()) == true && depth != pvDepth) //getBestLine().cmove > 0) //&& getBestLine().cmove > 0)
+	{
+		if (debug == true)
+		{
+			int boardVal = Eval.evaluateBoard(Board) * colour;
+			Board.printMaterial();
+			Eval.printEvaluation(Board);
+
+			std::cout << "****************************************************************************************" << std::endl;
+			std::cout << "Got a repetition " << Hash.getZobristKey() << " boardVal " << boardVal << std::endl;
+			std::cout << "****************************************************************************************" << std::endl;
+		}
+			val = 0;
+			return val;
+	}
+
+	if (hashVal != VALUNKNOWN && getBestLine().cmove > 0  )
 	{
 		// if the move has already been searched (hence has a value)
 		// we just return the score for this move without searching it
 
+		//make surte that there is an entry in bestLine or gui will make a "noMove" move
+
 		numberOfHashMatches++;
 		val = hashVal;
+		//if (repetition = true) val = 0;
+		
 		return val;
 	}
 	
-
 	if (depth == 0) //TODO or game over ///Gone to depth of tree. Now evaluate and pass down values
 	{
 		pline->cmove = 0;
@@ -611,6 +632,8 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		val = quiescence(Board, Hash, alpha, beta);
 		return val;
 	}
+	
+	
 
 
 	//for each child of Board
@@ -623,7 +646,6 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 
 	if (pvMove != 0)
 	{
-
 		for (int i = 0; i < moves.size(); ++i)
 		{
 			if (moves[i].move == pvMove)

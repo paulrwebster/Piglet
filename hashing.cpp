@@ -2,6 +2,7 @@
 #include "gameboard.h"
 #include "moveGen.h"
 
+
 // define TT instance
 Hashing::transpositionTable hash_table[HASHSIZE];
 
@@ -14,6 +15,32 @@ Hashing::Hashing()
 Hashing::~Hashing()
 {
 
+}
+
+bool Hashing::probeHistory(unsigned long long zobrist)
+{
+    auto val = historySet.find(zobrist);
+    if (val != historySet.end()) return true;
+    else return false;
+}
+
+void Hashing::insertHistory(unsigned long long zobrist)
+{
+    historySet.insert(zobrist);
+}
+
+void Hashing::clearHistory()
+{
+    historySet.clear();
+}
+
+void Hashing::printHistory()
+{
+    std::set<unsigned long long>::iterator it;
+    for (it = historySet.begin(); it != historySet.end(); it++)
+    {
+        std::cout << *it << std::endl;
+    }
 }
 
 void Hashing::generateHashKeys() 
@@ -148,7 +175,6 @@ int Hashing::ProbeHash(int depth, int alpha, int beta)
     //if hash entry doesn't exist
     return VALUNKNOWN; //Value Unknown 1000000 greater than alpha beta infinity cutoff of 999999
 }
-
 
 
 // write hash entry data

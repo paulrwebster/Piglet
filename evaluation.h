@@ -7,6 +7,7 @@ class Evaluation
 public:
 
 int evaluateBoard(Gameboard& Board); //calls evaluateWhite
+int printEvaluation(Gameboard& Board);
 int evaluate(Defs::Pieces piece, int square, Gameboard& Board);
 int getPieceVal(int pieceIndex);
 bool isEndGame(Gameboard& Board);

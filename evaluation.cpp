@@ -13,6 +13,24 @@ int Evaluation::evaluateBoard(Gameboard& Board) //this version returns +ve white
 	return boardScore;
 }
 
+int Evaluation::printEvaluation(Gameboard& Board)
+{
+	Board.printBoard();
+	int boardScore = 0;
+	for (int i = 0; i < 127; ++i)
+	{
+		Defs::Pieces piece = Board.getPiece(i);
+		int eval = evaluate(piece, i, Board); //evaluate square i
+		boardScore += eval;
+		if (eval != 0)
+		{
+			std::cout << "Piece " << Board.asciiPieces[static_cast<int>(piece)] << " square " << Board.indexToNotation(i) << " Value " << eval << std::endl;
+		}
+	}
+	std::cout << "Evaluation " << boardScore << std::endl;
+	return boardScore;
+}
+
 bool Evaluation::isEndGame(Gameboard& Board)
 {
 	if (Board.pieceCount[static_cast <int> (Defs::Pieces::Q)] == 0 && Board.pieceCount[static_cast <int> (Defs::Pieces::q)] == 0)

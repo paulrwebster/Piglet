@@ -1,10 +1,12 @@
 #include <iostream>
+#include<set>
 #include <string>
 #include <iomanip>   //setw
 #include <sstream>
 #include <functional> //std::ref
 #include <future>	//std::promise, std::future	
 #include <thread>	//std::thread
+#include <vector>
 #include "gameboard.h"
 #include "piglet.h"
 #include "fen.h"
@@ -34,6 +36,8 @@ bool ponderOption = false;
 
 vector<string> guiMoves; //holds the moves list sent by the gui as part of startpos moves command
 vector<string> goParts;  //holds the parsed parts of the go string
+vector<unsigned long long> history; //holds zobrist keys for all the board positions played, used for 3 times repetition tracking
+//std::set<unsigned long long> historySet; //populated with zobrist keys of board positions that have occurred at least twice, used for 3 fold repetition
 
 std::jthread iteration;
 
@@ -77,8 +81,9 @@ int UCI()
 
 	while (getline(cin, Line)) {
 		std::cout << "Input received: " << Line << std::endl;
+
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.3.2" << std::endl;
+			std::cout << "id name Piglet 1.3.3" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "option name Threads type spin default 1 min 1 max 512" << std::endl;
@@ -204,14 +209,37 @@ int UCI()
 			}
 			Board->updatePieceList();
 			Board->setKingSquares();
-
+			history.clear(); //will rebuild table each time from the guiMoves vector 
+			Hash->clearHistory();//clear the history set of duplicate positions held in hashing class
 			for (int m = 0; m < guiMoves.size(); ++m) //Make the moves in the guiMoves vector
 			{
 				int move = Moves->notationToMoveRepresentation(guiMoves[m], *Board);
 				Board->movePiece(move, *Hash, *Moves);
+				//update the history vector of hashes
+				unsigned long long h = Hash->generatePositionKey(*Board);
+				history.push_back(h);
 			}
+
+			
+			//sort the history vector
+			std::sort(history.begin(), history.end());
+			
+			//Find the positions that have ocurred twice and insert into a set
+			vector<unsigned long long>::iterator it;
+			vector<unsigned long long>::iterator it2;
+			for (it = history.begin(); it != history.end(); it++)
+			{
+				for (it2 = it + 1; it2 != history.end(); it2++)
+				{
+					if (*it == *it2)  Hash->insertHistory(*it);
+				}
+					
+			}
+			
+
 			if (debug == true)
 			{
+				Hash->printHistory();
 				int boardScore = EvalMain->evaluateBoard(*Board); //evaluate the board
 				Board->printBoard();
 				Board->printPieceList();
@@ -313,10 +341,10 @@ int UCI()
 
 			}
 			int timeAllowed = calcMoveTime(moveTime, wtime, btime, winc, binc, movestogo);
-			//if (debug)
-			//{
+			if (debug)
+			{
 				std::cout << "Time allowed " << timeAllowed << std::endl;
-			//}
+			}
 			//std::async(std::launch::async, iterate, depth, moveTime, debug);
 			
 			
@@ -326,7 +354,6 @@ int UCI()
 			iteration.detach();
 			//iterate(depth, timeAllowed);
 		}
-
 	}
 	return 0;
 }
@@ -558,6 +585,8 @@ int devStuff()
 	//Board->parseFen("4kqr1/8/8/8/8/8/8/2K5 b - - 0 1");//test mate
 	//position fen 4k3/Pppp1ppp/8/8/8/8/Pp1P2PP/5K2 w - -0 1 moves a7a8q e8e7 f1f2 b2b1b                                                      engine.py : 1023
 	//go wtime 55189 btime 67680 winc 8000 binc 8000 movetime 12000
+	//position fen q4rk1/5p1p/8/5Q2/8/6P1/p4P1P/6K1 w - -0 1 moves f5g5 g8h8 g5f6 h8g8 f6g5;
+	
 
 	Board->printBoard();
 	Board->updatePieceList();
@@ -724,6 +753,7 @@ int devStuff()
 
 	return 0;
 }
+
 
 int perft()
 {

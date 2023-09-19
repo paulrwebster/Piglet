@@ -5,6 +5,7 @@
 #include <iostream>
 #include "gameboard.h"
 #include "moveGen.h"
+#include<set>
 
 class Hashing {
 public:
@@ -29,14 +30,17 @@ public:
 	void setZobristSide();
 	void setZobristCastle(int castleflag);
 	unsigned long long getZobristKey();
+	bool probeHistory(unsigned long long zobrist);
+	void insertHistory(unsigned long long zobrist);
+	void clearHistory();
+	void printHistory();
 	
-//private:
-	//Hashing();//Private constructor
-	//~Hashing();
+	
 	std::mt19937_64 twister; //mersenne twister
 	unsigned long long hashkeys[781] = {}; //(12*64 pieces on squares + 1 side black + 4 castling rights + 8 enpassant file)
 	unsigned long long zobristKey = 0;
-
+private:
+	std::set<unsigned long long> historySet = {}; //populated with zobrist keys of board positions that have occurred at least twice, used for 3 fold repetition
 };
 
 #endif

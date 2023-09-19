@@ -89,6 +89,7 @@ private:
 	int failQHigh = 0; //quiescence ordering stats
 	int failQHighFirst = 0;
 	long long nodes = 0;
+	
 };
 
 #endif
