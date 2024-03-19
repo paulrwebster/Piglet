@@ -6,14 +6,29 @@ class Evaluation
 {
 public:
 
+int evaluateBoardNew(Gameboard& Board, bool Print = false); //This is the new version with bishop, rook, queen mobility
 int evaluateBoard(Gameboard& Board); //calls evaluateWhite
+int printEvaluationNew(Gameboard& Board);
 int printEvaluation(Gameboard& Board);
 int evaluate(Defs::Pieces piece, int square, Gameboard& Board);
 int getPieceVal(int pieceIndex);
-bool isEndGame(Gameboard& Board);
+Defs::GameState getGameState(Gameboard& Board);
 
 
 private:
+	int rookPairBonus = 0;
+	int knightPairBonus = 0;
+	int bishopPairBonus = 0;
+	int rookMobilityBonus = 0;
+	int bishopMobilityBonus = 0;
+	int knightMobilityBonus = 0;
+	int queenMobilityBonus = 0;
+
+	int rookMobility(Gameboard& Board, int Square);
+	int knightMobility(Gameboard& Board, int Square);
+	int bishopMobility(Gameboard& Board, int Square);
+	int queenMobility(Gameboard& Board, int Square);
+
 	 //      empty, P,  N,  B,  R,  Q,  K,    p,  n,  b,  r,  q,   k, offboard, ep
 int pieceVal[15]{0,100,320,330,500,900,20000,100,320,330,500,900,20000,0,0}; //centipawn scale
 

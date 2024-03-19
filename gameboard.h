@@ -32,6 +32,10 @@ class Gameboard
     int whiteKingSquare;
     int blackKingSquare;
     unsigned long long hash = 0;
+    //history stuff
+    unsigned long long boardHistory[1000] = {0}; //holds zobrist keys for all the board positions played, used for 3 times repetition tracking
+    int hisKey = 0; //Key for accessing the history array
+
 
 	public: 
     //static Gameboard* instance;
@@ -58,6 +62,16 @@ class Gameboard
     int getKingSquare(char side);
     int clearEnpassantFlag(char side);
     char asciiPieces[15]{ '-', 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k', 'x', 'e' }; // '-' empty, 'x' offboard, 'e enpassant'
+
+    //history stuff
+    void initialiseHisKey();
+    unsigned long long decrementHisKey();
+    unsigned long long incrementHisKey();
+    unsigned long long getHisKey();
+    void initialiseBoardHistory();
+    unsigned long long getBoardHistory(int key);
+    void setBoardHistory(unsigned long long hash);
+    bool isRepetition();
 
     //piece list stuff
     int material[3] = { 0 }; //WHITE w, BLACK b, x material of pieces

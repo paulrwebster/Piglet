@@ -36,7 +36,8 @@ bool ponderOption = false;
 
 vector<string> guiMoves; //holds the moves list sent by the gui as part of startpos moves command
 vector<string> goParts;  //holds the parsed parts of the go string
-vector<unsigned long long> history; //holds zobrist keys for all the board positions played, used for 3 times repetition tracking
+//going to replace these two with array in gameBoard
+//vector<unsigned long long> history; //holds zobrist keys for all the board positions played, used for 3 times repetition tracking
 //std::set<unsigned long long> historySet; //populated with zobrist keys of board positions that have occurred at least twice, used for 3 fold repetition
 
 std::jthread iteration;
@@ -83,7 +84,7 @@ int UCI()
 		std::cout << "Input received: " << Line << std::endl;
 
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.3.3" << std::endl;
+			std::cout << "id name Piglet 1.3.5" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "option name Threads type spin default 1 min 1 max 512" << std::endl;
@@ -142,6 +143,8 @@ int UCI()
 			Minimax->resetNumberOfHashMatches();
 			Minimax->stopPondering();
 			Minimax->setPonderhit(false);
+			Board->initialiseHisKey();
+			Board ->initialiseBoardHistory();
 		}
 
 		else if (Line == "setoption name Ponder value false")
@@ -209,22 +212,44 @@ int UCI()
 			}
 			Board->updatePieceList();
 			Board->setKingSquares();
-			history.clear(); //will rebuild table each time from the guiMoves vector 
-			Hash->clearHistory();//clear the history set of duplicate positions held in hashing class
+			//history.clear(); //will rebuild table each time from the guiMoves vector 
+			Hash->clearHistory();//clear the history set of positions held in hashing class
+			//Add the opening fen to the history vector
+			//unsigned long long f = Hash->generatePositionKey(*Board);
+			//history.push_back(f);
+
+			
+
+			//Roll hisKey counter back to zero as going to make all moves in the guiMove vector again
+			Board->initialiseHisKey();
+			//Clear the boardHistory array
+			Board->initialiseBoardHistory();
+			//Add the opening fen to the boardHistory array
+			unsigned long long f = Hash->generatePositionKey(*Board);
+			Board->setBoardHistory(f);
+
 			for (int m = 0; m < guiMoves.size(); ++m) //Make the moves in the guiMoves vector
 			{
+				
 				int move = Moves->notationToMoveRepresentation(guiMoves[m], *Board);
 				Board->movePiece(move, *Hash, *Moves);
 				//update the history vector of hashes
-				unsigned long long h = Hash->generatePositionKey(*Board);
-				history.push_back(h);
+  				unsigned long long h = Hash->generatePositionKey(*Board);
+				//history.push_back(h);
+				
+				//Put the move in the history set for 3 (really 2) times repition recognition
+				//Set if the position has occured once already. 
+				//If the position comes up twice, it will come up many times
+				//Hash->insertHistory(h);
 			}
 
 			
 			//sort the history vector
-			std::sort(history.begin(), history.end());
+			//std::sort(history.begin(), history.end());
 			
 			//Find the positions that have ocurred twice and insert into a set
+			
+			/*
 			vector<unsigned long long>::iterator it;
 			vector<unsigned long long>::iterator it2;
 			for (it = history.begin(); it != history.end(); it++)
@@ -235,14 +260,26 @@ int UCI()
 				}
 					
 			}
-			
+			*/
+
+			//Stick them in the history set if they have occured once already. 
+			//If the position comes up twice, it will come up many times
+			/*
+			vector<unsigned long long>::iterator it;
+			for (it = history.begin(); it != history.end(); it++)
+			{
+					Hash->insertHistory(*it);
+			}
+			*/
 
 			if (debug == true)
 			{
-				Hash->printHistory();
-				int boardScore = EvalMain->evaluateBoard(*Board); //evaluate the board
+				//Hash->printHistory();
+			 	int boardScore = EvalMain->evaluateBoard(*Board); //evaluate the board
 				Board->printBoard();
 				Board->printPieceList();
+
+				
 			}
 		}
 		else if (Line == "stop") {
@@ -260,7 +297,11 @@ int UCI()
 		{
 			Board->printBoard();
 		}
-
+		
+		else if (Line == "print evaluation"|| Line == "pr eval")
+		{
+			EvalMain->printEvaluation(*Board);
+		}
 		else if (Line == "ponderhit")
 		{
 			if (debug == true) { std::cout << "Ponderhit received " << std::endl; }
@@ -353,6 +394,9 @@ int UCI()
 			//std::thread iteration(iterate, depth, moveTime);
 			iteration.detach();
 			//iterate(depth, timeAllowed);
+			
+			//EvalMain->evaluateBoard(*Board, true); //print evaluation of board
+
 		}
 	}
 	return 0;
@@ -542,6 +586,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 		Board->movePiece(bestMove, *Hash, *Moves);
 		if (debug == true)
 		{
+			//std::cout << "hisKey " << Board->getHisKey() << std::endl;
 			//std::cout << "string bestMove is " << bestMoveNotation << std::endl;
 			//Board->printBoard();
 			//Board->printPieceList();
@@ -554,6 +599,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 		else
 		{
 			std::cout << std::endl << "bestmove " << bestMoveNotation << std::endl;
+			
 		}
 	
 }
@@ -561,7 +607,7 @@ void iterate(std::stop_token st, int depth, int moveTime)
 
 int devStuff()
 {
-	int depth = 3;
+	int depth = 1;
 	bool iterativeDeepening = false;
 	//int moveTime = 6;
 	int moveTime = Defs::MaxSearchTime;
@@ -575,8 +621,9 @@ int devStuff()
 	std::stop_source ss;
 	std::stop_token st = ss.get_token();
 	//set up the board
-	Board->parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); //opening board
-	//Board->parseFen("q4rk1/5p1p/8/5Q2/8/6P1/p4P1P/6K1 w - - 0 1"); //threefold repitition 
+	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); //opening board
+	//Board->parseFen("q4rk1/5p1p/8/5Q2/8/6P1/p4P1P/6K1 w - - 0 1"); //threefold repetition 
+	Board->parseFen("q4rk1/5p1p/8/5Q2/8/6P1/p4P1P/5RKR w - -0 1"); //threefold repetition 
 	//Board->parseFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 0 1"); //opening board plus knight move
 	//Board->parseFen("rnb1k2r/pp2qppp/3p1n2/2pp2B1/1bP5/2N1P3/PP2NPP/R2QKB1R w KQkq - 0 1"); //Bluefever video 50 Middle Game Position. Demos quiescence at depth 3
 	//Board->parseFen("r1bqkb1r/ppp1pppp/3p4/1B6/3QP3/2N5/PPP2PPP/R1B1K2R b KQkq - 0 1");//test check depth increase

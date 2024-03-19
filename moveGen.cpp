@@ -28,6 +28,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 	if (side == 'w')
 	{
 		Board.clearEnpassantFlag('w');
+		
 		piece = static_cast<int>(Defs::Pieces::K);
 		for (pieceCnt = 1; pieceCnt <= Board.pieceCount[piece]; ++pieceCnt)
 		{
@@ -36,6 +37,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 			whiteKingSideCastle(Board, ply);
 			whiteQueenSideCastle(Board, ply);
 		}
+		
 		piece = static_cast<int>(Defs::Pieces::Q);
 		for (pieceCnt = 1; pieceCnt <= Board.pieceCount[piece]; ++pieceCnt)
 		{
@@ -43,6 +45,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 			rookMove(Board, ply, i, side, false);
 			bishopMove(Board, ply, i, side, false);
 		}
+		
 		piece = static_cast<int>(Defs::Pieces::R);
 		for (pieceCnt = 1; pieceCnt <= Board.pieceCount[piece]; ++pieceCnt)
 		{
@@ -72,6 +75,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 			whitePawnCaptureMove(Board, ply, i, false);
 		}
 		
+		
 	}
 
 	//black moves
@@ -87,7 +91,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 			blackKingSideCastle(Board, ply);
 			blackQueenSideCastle(Board, ply);
 		}
-
+		
 		piece = static_cast<int>(Defs::Pieces::q);
 		for (pieceCnt = 1; pieceCnt <= Board.pieceCount[piece]; ++pieceCnt)
 		{
@@ -125,7 +129,7 @@ vector <MoveGen::moveList> MoveGen::generateMoves(Gameboard &Board, int ply)
 			blackPawnCaptureMove(Board, ply, i, false);
 
 		}
-
+		
 	}
 	
 	return moves;

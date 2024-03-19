@@ -21,8 +21,48 @@ Gameboard::~Gameboard()
 	//std::cout << "Calling Gameboard destructor " << std::endl;
 }
 
+unsigned long long hash = 0;
 
-void Gameboard::movePiece(int& move,  Hashing& Hash, MoveGen& Moves)
+void Gameboard::initialiseHisKey()
+{
+	hisKey = 0;
+}
+
+unsigned long long Gameboard::decrementHisKey()
+{
+	hisKey--;
+	return hisKey;
+}
+unsigned long long Gameboard::incrementHisKey()
+{
+	hisKey++;
+	return hisKey;
+}
+unsigned long long Gameboard::getHisKey()
+{
+	return hisKey;
+
+}
+
+void Gameboard::initialiseBoardHistory()
+{
+	for (int i = 0; i < 1000; i++)
+	{
+		boardHistory[i] = 0;
+	}
+}
+
+unsigned long long Gameboard::getBoardHistory(int key)
+{
+	return boardHistory[key];
+}
+
+void Gameboard::setBoardHistory(unsigned long long  hash)
+{
+	boardHistory[getHisKey()] = hash;
+}
+
+void Gameboard::movePiece(int& move, Hashing& Hash, MoveGen& Moves)
 {
 	int epSquare = Defs::NoSquare;
 	int from = Moves.fromSquare(move);
@@ -40,7 +80,6 @@ void Gameboard::movePiece(int& move,  Hashing& Hash, MoveGen& Moves)
 	int piecePromotedIndex = 0;
 	int piecePromotedLastIndex = 0;
 	int pieceMovingLastIndex = 0;
-
 
 
 	//get hold of the existing oppostion ep square on the board
@@ -487,7 +526,13 @@ void Gameboard::movePiece(int& move,  Hashing& Hash, MoveGen& Moves)
 		pieceBoard[to] = static_cast <Defs::Pieces>(promotedPiece);
 	}
 
-	setBoardHash(Hash.getZobristKey());
+	incrementHisKey();
+	unsigned long long boardHash = Hash.getZobristKey();
+	//setBoardHash(Hash.getZobristKey());
+	setBoardHash(boardHash);
+	boardHistory[hisKey] = boardHash;
+	
+	
 	Hash.setZobristSide();
 	swapSide();
 
@@ -966,6 +1011,7 @@ void Gameboard::movePiece(int& move,  Hashing& Hash, MoveGen& Moves)
 		//xor in ep file
 		if (epSquare != Defs::NoSquare) Hash.setZobristEp(epSquare);
 		setBoardHash(Hash.getZobristKey());
+		decrementHisKey();
 	}
 
 int Gameboard::epRemovePieceList()
@@ -1349,7 +1395,24 @@ void Gameboard::printBoard() {
 	std::cout << "Castle Flag: " << std::bitset<4>(castleFlag) << std::endl;
 	std::cout << "Halfmove Clock: " << std::dec << halfMove << std::endl;
 	std::cout << "Fullmove Number: " << std::dec << fullMove << std::endl;
+	std::cout << "Hash: " << getBoardHash() << std::endl;
+
 	Evaluation Eval;
+	Defs::GameState gameState = Eval.getGameState(*this);
+	switch (static_cast <int> (gameState)) {
+	case 0:
+		std::cout << "Opening Game Stage "  << std::endl << std::endl;
+		break;
+	case 1:
+		std::cout << "Middle Game Stage " << std::endl << std::endl;
+		break;
+	case 2:
+		std::cout << "End Game Stage " << std::endl << std::endl;
+		break;
+	default:
+		break;
+	}
+
 	//int eval = Eval.evaluateBoard(*this);
 	//std::cout << "Board evaluation: " << eval << std::endl << std::endl;
 
@@ -1634,5 +1697,30 @@ char Gameboard::swapSide()
 		side = 'w';
 	return side;
 }
+
+bool Gameboard::isRepetition()
+{
+		for (int index = 0; index < getHisKey()-1; ++index) //amend to run from getHisKey() - fiftymove rather than 0
+		{
+			
+
+			if (hash == boardHistory[index])
+			{
+				/*
+				std::cout << "****************=========================================************************* " << std::endl;
+				std::cout << "                      Returning True " << std::endl;
+				std::cout << "****************=========================================************************* " << std::endl;
+				std::cout << "hash is " << hash << std::endl;
+				std::cout << "boardHistory[index] is " << boardHistory[index] << std::endl;
+				std::cout << "index is " << index << std::endl;
+				std::cout << "getHisKey()  is " << getHisKey()  << std::endl;
+				printBoard();
+				*/
+				return true;  //score for a draw
+			}
+		}
+		return false;
+}
+
 
 

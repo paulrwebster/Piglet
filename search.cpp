@@ -583,7 +583,7 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 	vector <MoveGen::moveList> moves;
 	LINE line;
 
-	
+
 	numberOfNodes++;
 
 	if (chessMoves.isInCheck(Board, colour) == true)
@@ -592,25 +592,15 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		pvDepth++;
 	}
 
-	//if move has occurred twice before and we will be invoking 3 times repetition, set val to zero if positive
 	
-	if (Hash.probeHistory(Hash.getZobristKey()) == true && depth != pvDepth) //getBestLine().cmove > 0) //&& getBestLine().cmove > 0)
+	//Look for repetition and return zero (draw) if found. 3 x repetition is a draw. Happens once, will happen again.
+	if (Board.isRepetition() && depth != pvDepth)
 	{
-		if (debug == true)
-		{
-			int boardVal = Eval.evaluateBoard(Board) * colour;
-			Board.printMaterial();
-			Eval.printEvaluation(Board);
-
-			std::cout << "****************************************************************************************" << std::endl;
-			std::cout << "Got a repetition " << Hash.getZobristKey() << " boardVal " << boardVal << std::endl;
-			std::cout << "****************************************************************************************" << std::endl;
-		}
-			val = 0;
-			return val;
+		return 0;
 	}
 
-	if (hashVal != VALUNKNOWN && getBestLine().cmove > 0  )
+
+	if (hashVal != VALUNKNOWN && getBestLine().cmove > 0)
 	{
 		// if the move has already been searched (hence has a value)
 		// we just return the score for this move without searching it
@@ -620,10 +610,12 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		numberOfHashMatches++;
 		val = hashVal;
 		//if (repetition = true) val = 0;
-		
+
 		return val;
 	}
+
 	
+
 	if (depth == 0) //TODO or game over ///Gone to depth of tree. Now evaluate and pass down values
 	{
 		pline->cmove = 0;
@@ -690,18 +682,30 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 			}
 		}
 		Board.movePiece(moves[i].move, Hash, chessMoves);
+		
+		// for testing
+		/*
+		MoveGen Moves;
+		Moves.printMoveRepresentation(moves[i].move);
+		std::cout << "hash " << Board.getBoardHash() << std::endl;
+		Board.printBoard();
+		*/
+		//
+
 		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			legal++;
 			//numberOfNodes++;
 			val = -negamax(st, Board, Hash, depth - 1, pvDepth, ponderDepth, -beta, -alpha, &line, timePerMove, mate - 1);
 			
+
+
 			if (val == Defs::StopEngine)
 			{
 				return val;
 			}
 			
-			
+			              
 
 
 			Board.revertPiece(moves[i].move, Hash, chessMoves);
