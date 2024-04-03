@@ -573,7 +573,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 }
 
 
-int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate)
+int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, double timePerMove, int mate)
 {
 	int legal = 0;
 	int val = 0;

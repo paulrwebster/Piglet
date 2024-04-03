@@ -84,7 +84,7 @@ int UCI()
 		std::cout << "Input received: " << Line << std::endl;
 
 		if (Line == "uci") {
-			std::cout << "id name Piglet 1.3.5" << std::endl;
+			std::cout << "id name Piglet 1.3.6" << std::endl;
 			std::cout << "id author Paul Webster" << std::endl;
 			std::cout << "option name Ponder type check" << std::endl;
 			std::cout << "option name Threads type spin default 1 min 1 max 512" << std::endl;
@@ -381,7 +381,7 @@ int UCI()
 				}
 
 			}
-			int timeAllowed = calcMoveTime(moveTime, wtime, btime, winc, binc, movestogo);
+			double timeAllowed = calcMoveTime(moveTime, wtime, btime, winc, binc, movestogo);
 			if (debug)
 			{
 				std::cout << "Time allowed " << timeAllowed << std::endl;
@@ -402,6 +402,7 @@ int UCI()
 	return 0;
 }
 
+/*
 int calcMoveTime(int moveTime, int wtime, int btime, int winc, int binc, int movestogo)
 {
 	int timeAllowed = 0;
@@ -409,11 +410,22 @@ int calcMoveTime(int moveTime, int wtime, int btime, int winc, int binc, int mov
 	char side = Board->getSide();
 	if (side == 'w' && (wtime + winc) > 0) timeAllowed = (wtime + winc) / movestogo / 1000;
 	if (side == 'b' && (btime + binc) > 0) timeAllowed = (btime + binc) / movestogo / 1000;
-	if (timeAllowed > 30) { timeAllowed = 30; }//keep it down to 30 seconds
+	if (timeAllowed > 30) { timeAllowed = 30; }//keep it down to 30 seconds]
+	return timeAllowed;
+}
+*/
+double calcMoveTime(int moveTime, int wtime, int btime, int winc, int binc, int movestogo)
+{
+	double timeAllowed = 0;
+	if (moveTime > 0) timeAllowed = moveTime;
+	char side = Board->getSide();
+	if (side == 'w' && (wtime + winc) > 0) timeAllowed = (wtime + winc) / static_cast<double> (movestogo) / static_cast <double> (1000);
+	if (side == 'b' && (btime + binc) > 0) timeAllowed = (btime + binc) / static_cast<double> (movestogo) / static_cast <double> (1000);
+	if (timeAllowed > 30) { timeAllowed = 30; }//keep it down to 30 seconds]
 	return timeAllowed;
 }
 
-void iterate(std::stop_token st, int depth, int moveTime)
+void iterate(std::stop_token st, int depth, double moveTime)
 {
 	//std::cout << "New thread " << std::endl;
 	int bestMove = Defs::NoMove;

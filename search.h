@@ -21,7 +21,7 @@ public:
 		unsigned long long hash[Defs::MaxSearchDepth]{}; //holds the board position hash 
 	}   LINE;
 
-	int negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, int timePerMove, int mate);
+	int negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int depth, int pvDepth, int ponderDepth, int alpha, int beta, LINE* pline, double timePerMove, int mate);
 	int quiescence(Gameboard& Board, Hashing& QHash, int alpha, int beta);
 	int quiescence(Gameboard& Board, Hashing& QHash, int depth, int alpha, int beta, int timePerMove); //depth limited quiescence
 	int getBestMoveFound();
