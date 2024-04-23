@@ -154,7 +154,7 @@ int Evaluation::evaluateBoardNew(Gameboard& Board, bool Print) //this version re
 		Defs::Pieces piece = Board.getPiece(i);
 		int eval = evaluate(piece, i, Board); //evaluate square i
 		boardScore += eval;
-
+		
 		if (piece == Defs::Pieces::R) { rookMobilityBonus += rookMobility(Board, i); }
 		if (piece == Defs::Pieces::r) { rookMobilityBonus -= rookMobility(Board, i); }
 		if (piece == Defs::Pieces::B) { bishopMobilityBonus += bishopMobility(Board, i); }
@@ -175,6 +175,7 @@ int Evaluation::evaluateBoardNew(Gameboard& Board, bool Print) //this version re
 		}
 	}
 	// Pairs - Bonus fow bishop, penalty for Knight and Rook
+	
 	if (Board.pieceCount[static_cast <int> (Defs::Pieces::B)] >= 2) bishopPairBonus += 30;
 	if (Board.pieceCount[static_cast <int> (Defs::Pieces::b)] >= 2) bishopPairBonus -= 30;
 	if (Board.pieceCount[static_cast <int> (Defs::Pieces::N)] >= 2) knightPairBonus -= 8;
@@ -188,6 +189,7 @@ int Evaluation::evaluateBoardNew(Gameboard& Board, bool Print) //this version re
 	boardScore += rookMobilityBonus;
 	boardScore += bishopMobilityBonus;
 	boardScore += knightMobilityBonus;
+	
 
 	if (Print == true)
 	{

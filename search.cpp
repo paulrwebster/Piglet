@@ -419,7 +419,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash, int depth, int alpha, in
 	vector <MoveGen::moveList> captureMoves;
 	LINE line;
 
-	int standPat = Eval.evaluateBoard(Board) * colour;
+	int standPat = Eval.evaluateBoardNew(Board) * colour;
 	//stand pat stuff. If score is above beta, we can safely return beta
 	if (standPat >= beta)
 	{
@@ -501,7 +501,7 @@ int Search::quiescence(Gameboard& Board, Hashing& Hash,int alpha, int beta) {
 	//numberOfQNodes++;
 	
 
-	int standPat = Eval.evaluateBoard(Board) * colour;
+	int standPat = Eval.evaluateBoardNew(Board) * colour;
 	//stand pat stuff. If score is above beta, we can safely return beta
 	if (standPat >= beta)
 	{
@@ -654,20 +654,22 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 	for (int i = 0; i < moves.size(); ++i)
 	{
 		if (st.stop_requested()) {
-			std::cout << "stop token received by negamax " << std::endl;
+			//std::cout << "stop token received by negamax " << std::endl;
 			return Defs::StopEngine;
+			break;
 		}
 
 		if (stop == true)
 		{
-			if (debug == true) { std::cout << "negamax is returning Defs::stopEngine " << std::endl; }
-			std::cout << "negamax is returning Defs::stopEngine " << std::endl;
+			if (debug == true) { std::cout << "b. negamax is returning Defs::stopEngine " << std::endl; }
+			//std::cout << "negamax is returning Defs::stopEngine " << std::endl;
 			val = Defs::StopEngine;
 			return val;
 		}
 		if (ponderhit == true && pvDepth > ponderDepth)
 		{
 			if (debug == true) { std::cout << "ponderhit has triggered Defs::stopEngine " << std::endl; }
+			//std::cout << "ponderhit has triggered Defs::stopEngine " << std::endl;
 			val = Defs::StopEngine;
 			return val;
 		}
@@ -677,21 +679,13 @@ int Search::negamax(std::stop_token st, Gameboard& Board, Hashing& Hash, int dep
 		if ((timeElapsed.count() - timePerMove) > 0) {
 			if (isPondering() == false)
 			{
+				//std::cout << "timeElapsed has triggered Defs::stopEngine " << std::endl;
 				val = Defs::StopEngine;
 				return val;
 			}
 		}
 		Board.movePiece(moves[i].move, Hash, chessMoves);
 		
-		// for testing
-		/*
-		MoveGen Moves;
-		Moves.printMoveRepresentation(moves[i].move);
-		std::cout << "hash " << Board.getBoardHash() << std::endl;
-		Board.printBoard();
-		*/
-		//
-
 		if (chessMoves.isInCheck(Board, colour) == false)
 		{
 			legal++;
